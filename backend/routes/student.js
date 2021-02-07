@@ -63,4 +63,10 @@ router.route('/specific-college/:id').get((req,res) => {
         .catch(err => res.status(400).json('Error: ' + err));
 })
 
+router.route('/specific-student/:id').get((req,res) => {
+    Student.find({"_id": req.params.id})
+        .then(students => res.json(students))
+        .catch(err => res.status(400).json('Error: ' + err));
+})
+
 module.exports = router;
