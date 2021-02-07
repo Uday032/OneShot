@@ -149,7 +149,7 @@ export default class MainPage extends Component {
                                     <DataDetailList label="Year Founded" value={this.state.collegeyearfounded} />
                                     <DataDetailList label="No. of Students" value={this.state.collegenoofstudents} />
                                     <DataDetailList label="Location" value={this.state.collegecity+", "+ this.state.collegestate+", "+ this.state.collegecountry} />
-                                    <DataDetailList label="Courses Provided" value={this.state.coursesoffered} />
+                                    <DataDetailList label="Courses Provided" value={this.state.coursesoffered} type="array"/>
                                 </ul>
                             </div>
                         </div>
@@ -161,7 +161,7 @@ export default class MainPage extends Component {
                                 <ul>
                                     <DataDetailList label="Name" value={this.state.studentname} />
                                     <DataDetailList label="Batch Year" value={this.state.studentbatchyear} />
-                                    <DataDetailList label="Skills" value={this.state.studentskills} />
+                                    <DataDetailList label="Skills" value={this.state.studentskills} type="array"/>
                                 </ul>
                             </div>
                         </div>
