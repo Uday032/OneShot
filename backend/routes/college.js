@@ -45,6 +45,28 @@ router.route('/').get((req, res) => {
     .catch(err => res.status(400).json('Error: ' + err));
 });
 
+router.route('/similarcolleges/:collegeid').get(async (req,res) => {
+  let collegedetails = await College.find({_id: req.params.collegeid});
+  var similarcolleges = {}
+  var similarcollegesarray = []
+  for(var i=0; i<collegedetails[0].courses.length;i++){
+    // console.log(collegedetails[0].courses[i]);
+    let samecoursescolleges = await College.find({courses: collegedetails[0].courses[i]});
+    for(var j=0;j<samecoursescolleges.length;j++) {
+      // console.log(samecoursescolleges[j].name);
+      if(!(samecoursescolleges[j].name in similarcolleges)) {
+        similarcolleges[samecoursescolleges[j].name] = samecoursescolleges[j];
+        continue;
+      }
+    }
+  }
+  for(var key in similarcolleges) {
+    similarcollegesarray.push(similarcolleges[key])
+  }
+  res.json(similarcollegesarray);
+
+})
+
 router.route('/upload').get((req, res) => {
   createrandomdata();
   res.json("Uploaded")
@@ -66,10 +88,10 @@ router.route('/collegedata/chart').get((req, res) => {
     .then(collegesstates => {
       var dict = {};
       var percentvalue = [];
-      var label = []
+      var label = [];
       for(var i =0;i<collegesstates.length;i++) {
         if (!(collegesstates[i].state in dict)) {
-          dict[collegesstates[i].state]=0
+          dict[collegesstates[i].state]=0;
         }
         dict[collegesstates[i].state]= dict[collegesstates[i].state]+1;
       }

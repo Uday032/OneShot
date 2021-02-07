@@ -1,7 +1,9 @@
 import React, { Component } from 'react'
-import {Row, Col} from 'react-bootstrap'
+import {Row, Col, CardColumns} from 'react-bootstrap'
 import ReactSelect from './ReactSelect'
 import DataDetailList from './DataDetailsList'
+import SimilarCollegesCard from './SimilarCollegesCard'
+
 //axios
 import instance from '../axios'
 
@@ -29,7 +31,9 @@ export default class MainPage extends Component {
             studentskills: [],
             coursesoffered: [],
             studentoptions: [],
-            collegeoptions: []
+            collegeoptions: [],
+            similarcolleges: [],
+            showsimilarcolleges: 0
         }
     }
 
@@ -64,7 +68,8 @@ export default class MainPage extends Component {
                         collegestate: response.data[0].state,
                         collegenoofstudents: response.data[0].no_of_students,
                         coursesoffered: response.data[0].courses,
-                        showcollegedetails: 1
+                        showcollegedetails: 1,
+                        showsimilarcolleges: 1
                     })
                 }
             })
@@ -85,6 +90,14 @@ export default class MainPage extends Component {
                         selectedstudent: ''
                     })
                 }
+            })
+
+        let similarcollegeurl = '/college/similarcolleges/'+selectedcollege.value;
+        instance.get(similarcollegeurl)
+            .then((res) => {
+                this.setState({
+                    similarcolleges: res.data
+                })
             })
     }
 
@@ -155,6 +168,26 @@ export default class MainPage extends Component {
                     </Col>
                 </Row>
                 
+                <div className="mt-4" style={{ display: this.state.showsimilarcolleges ? "block" : "none" }}>
+                    <h5>Similar Colleges</h5>
+                    <CardColumns>
+                        {this.state.similarcolleges.map((similar) => {
+                            return(
+                                <SimilarCollegesCard 
+                                    collegename = {similar.name}
+                                    collegenoofstudents = {similar.no_of_students}
+                                    collegecity = {similar.city}
+                                    collegestate = {similar.state}
+                                    collegecountry = {similar.country}
+                                    coursesoffered = {similar.courses}
+                                    collegeyearfounded = {similar.yearfounded}
+                                />
+                            );
+                        })}
+                    </CardColumns>
+
+                    
+                </div>
             </div>
         )
     }
