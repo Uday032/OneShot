@@ -1,6 +1,9 @@
 import React, { Component } from 'react'
-import {Button} from 'react-bootstrap'
-import {Pie} from 'react-chartjs-2';
+import {Button, Row, Col} from 'react-bootstrap'
+import {Pie} from 'react-chartjs-2'
+import ReactSelect from './ReactSelect'
+import TableHeader from './TableHeader'
+
 //AXIOS
 import instance from '../axios'
 
@@ -10,10 +13,15 @@ export default class Charts extends Component {
         super();
 
         this.handleChartGenerator = this.handleChartGenerator.bind(this);
+        this.handleCourseChange = this.handleCourseChange.bind(this);
         this.state = {
             collegecoursesdata: [],
             courseslabels: [],
+            selectedcourse: '',
             showchart: Boolean(false),
+            specificcoursecolleges: [],
+            specificcoursecollegesheader: ['Name', 'No. of Students', 'Location', 'Courses Offered','Year Founded'],
+            showspecificcoursetable: 0,
             courseschartdata: {
                 labels: [],
                 datasets: [
@@ -51,16 +59,33 @@ export default class Charts extends Component {
                 const newchartdata = {...this.state.courseschartdata, labels: res.data.label, datasets: [data]};
                 this.setState({
                     courseschartdata: newchartdata,
-                    showchart: Boolean(true)
+                    showchart: Boolean(true),
+                    courseslabels: res.data.label.map((labels)=>{
+                        return({
+                            value: labels,
+                            label: labels
+                        })
+                    })
                 })
-                console.log(this.state.courseschartdata);
+                console.log(this.state.courseslabels);
             })
 
     }
 
+    handleCourseChange = selectedcourse => {
+        this.setState({selectedcourse});
+        let selectcourseurl = '/college/courses/'+selectedcourse.value;
+        instance.get(selectcourseurl)
+            .then((res)=>{
+                this.setState({
+                    specificcoursecolleges: res.data,
+                    showspecificcoursetable: 1
+                })
+            })
+    }
     render() {
         return (
-            <div className="mt-5">
+            <div className="mt-5 mb-5">
                 <Button variant="dark" onClick={this.handleChartGenerator}>Generate Chart</Button>{' '}
                 <Pie 
                     data={this.state.courseschartdata}
@@ -76,8 +101,25 @@ export default class Charts extends Component {
                         }
                     }}
                 />
-                <div>
-                    
+                <div className="mt-4" style={{ display: this.state.showchart ? "block" : "none" }}>
+                    <Row>
+                        <Col md="4">
+                            <p>Select Course:</p>
+                            <ReactSelect 
+                                selectedOption = {this.state.selectedcourse}
+                                handleChange={this.handleCourseChange}
+                                options = {this.state.courseslabels}
+                            />
+                        </Col>
+                    </Row>
+                </div>
+
+                <div className="mt-4" style={{ display: this.state.showspecificcoursetable ? "block" : "none" }}>
+                    <TableHeader
+                        header={this.state.specificcoursecollegesheader} 
+                        data = {this.state.specificcoursecolleges}
+                        dataname = "College"
+                    />  
                 </div>
             </div>
         )
