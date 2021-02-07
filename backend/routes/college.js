@@ -98,7 +98,6 @@ router.route('/chart/courses').get((req, res) => {
       var label = []
       for(var i =0;i<collegecourses.length;i++) {
         for(var j = 0;j<collegecourses[i].courses.length;j++){
-          console.log(collegecourses[i].courses[j]);
           if (!(collegecourses[i].courses[j] in dict)) {
             dict[collegecourses[i].courses[j]]=0
           }
@@ -111,7 +110,15 @@ router.route('/chart/courses').get((req, res) => {
       }
       res.json({'label': label, 'percentage': percentvalue})
     })
+    .catch(err => res.status(400).json('Error: ' + err));
 })
 
+router.route('/courses/:coursename').get((req,res) => {
+  College.find({courses: req.params.coursename})
+    .then((colleges) => {
+      res.json(colleges)
+    })
+    .catch(err => res.status(400).json('Error: ' + err));
+})
 
 module.exports = router;
