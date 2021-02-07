@@ -57,8 +57,61 @@ router.route('/delete').get((req, res) => {
 
 router.route('/college-details/:id').get((req, res) => {
   College.find({"_id": req.params.id})
-        .then(students => res.json(students))
+        .then(collegedetails => res.json(collegedetails))
         .catch(err => res.status(400).json('Error: ' + err));
 })
+
+router.route('/collegedata/chart').get((req, res) => {
+  College.find({},{state:1, _id: 0})
+    .then(collegesstates => {
+      var dict = {};
+      var percentvalue = [];
+      var label = []
+      for(var i =0;i<collegesstates.length;i++) {
+        if (!(collegesstates[i].state in dict)) {
+          dict[collegesstates[i].state]=0
+        }
+        dict[collegesstates[i].state]= dict[collegesstates[i].state]+1;
+      }
+      for(var key in dict) {
+        percentvalue.push(dict[key]);
+        label.push(key);
+      }
+      res.json({'label': label, 'percentage': percentvalue})
+    })
+    .catch(err => res.status(400).json('Error: ' + err));
+})
+
+router.route('/collegedata/chart/:id').get((req, res) => {
+  College.find({"state": res.params.id})
+    .then(collegesstates => {
+      res.json(collegesstates)
+    })
+    .catch(err => res.status(400).json('Error: ' + err));
+})
+
+router.route('/chart/courses').get((req, res) => {
+  College.find({}, {courses:1, _id:0})
+    .then((collegecourses) => {
+      var dict = {};
+      var percentvalue = [];
+      var label = []
+      for(var i =0;i<collegecourses.length;i++) {
+        for(var j = 0;j<collegecourses[i].courses.length;j++){
+          console.log(collegecourses[i].courses[j]);
+          if (!(collegecourses[i].courses[j] in dict)) {
+            dict[collegecourses[i].courses[j]]=0
+          }
+          dict[collegecourses[i].courses[j]]= dict[collegecourses[i].courses[j]]+1;
+        }
+      }
+      for(var key in dict) {
+        percentvalue.push(dict[key]);
+        label.push(key);
+      }
+      res.json({'label': label, 'percentage': percentvalue})
+    })
+})
+
 
 module.exports = router;
