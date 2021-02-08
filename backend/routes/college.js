@@ -105,7 +105,7 @@ router.route('/collegedata/chart').get((req, res) => {
 })
 
 router.route('/collegedata/chart/:id').get((req, res) => {
-  College.find({"state": res.params.id})
+  College.find({"state": req.params.id})
     .then(collegesstates => {
       res.json(collegesstates)
     })
