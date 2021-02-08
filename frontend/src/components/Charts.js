@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import {Button, Row, Col} from 'react-bootstrap'
-import {Pie} from 'react-chartjs-2'
+import {Pie, Bar} from 'react-chartjs-2'
 import ReactSelect from './ReactSelect'
 import TableHeader from './TableHeader'
 
@@ -14,14 +14,24 @@ export default class Charts extends Component {
 
         this.handleChartGenerator = this.handleChartGenerator.bind(this);
         this.handleCourseChange = this.handleCourseChange.bind(this);
+        this.handleChartCategoryChange = this.handleChartCategoryChange.bind(this);
+        this.handleStateChange = this.handleStateChange.bind(this);
+
         this.state = {
+            chartcategory: [{value: "courses", label:"Courses"}, {value: "states", label:"States"}],
+            selectedchartcategory: '',
             collegecoursesdata: [],
             courseslabels: [],
             selectedcourse: '',
             showchart: Boolean(false),
+            showcoursechart: 0,
+            showstatechart: 0,
             specificcoursecolleges: [],
             specificcoursecollegesheader: ['Name', 'No. of Students', 'Location', 'Courses Offered','Year Founded'],
             showspecificcoursetable: 0,
+            stateoptions: [],
+            showspecificstatetable: 0,
+            specificstatecolleges: [],
             courseschartdata: {
                 labels: [],
                 datasets: [
@@ -46,29 +56,72 @@ export default class Charts extends Component {
                         data: []
                     }
                 ]
+            },
+            statechartdata: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'States',
+                        fill: false,
+                        lineTension: 0.5,
+                        backgroundColor: 'rgba(75,192,192,1)',
+                        borderColor: 'rgba(0,0,0,1)',
+                        borderWidth: 2,
+                        data: []
+                    }
+                ]
             }
         }
     }
 
+    handleChartCategoryChange = selectedchartcategory => {
+        this.setState({selectedchartcategory});
+    }
+
     handleChartGenerator() {
-        instance.get('/college/chart/courses')
+
+        if(this.state.selectedchartcategory.value==='courses') {
+            instance.get('/college/chart/courses')
+                .then((res)=>{
+                    
+                    const data = {...this.state.courseschartdata.datasets[0], data: res.data.percentage};
+                    // const label = {...this.state.courseschartdata, labels: res.data.label};
+                    const newchartdata = {...this.state.courseschartdata, labels: res.data.label, datasets: [data]};
+                    this.setState({
+                        courseschartdata: newchartdata,
+                        showchart: Boolean(true),
+                        showcoursechart: 1,
+                        showstatechart:0,
+                        courseslabels: res.data.label.map((labels)=>{
+                            return({
+                                value: labels,
+                                label: labels
+                            })
+                        })
+                    })
+                    console.log(this.state.courseslabels);
+                })
+        }
+
+        if(this.state.selectedchartcategory.value==='states') {
+            instance.get('/college/collegedata/chart')
             .then((res)=>{
-                
-                const data = {...this.state.courseschartdata.datasets[0], data: res.data.percentage};
-                // const label = {...this.state.courseschartdata, labels: res.data.label};
-                const newchartdata = {...this.state.courseschartdata, labels: res.data.label, datasets: [data]};
+                const data = {...this.state.statechartdata.datasets[0], data: res.data.percentage};
+                    // const label = {...this.state.courseschartdata, labels: res.data.label};
+                const newchartdata = {...this.state.statechartdata, labels: res.data.label, datasets: [data]};
                 this.setState({
-                    courseschartdata: newchartdata,
-                    showchart: Boolean(true),
-                    courseslabels: res.data.label.map((labels)=>{
+                    statechartdata: newchartdata,
+                    showstatechart: 1,
+                    showcoursechart: 0,
+                    stateoptions: res.data.label.map((labels)=>{
                         return({
                             value: labels,
                             label: labels
                         })
                     })
                 })
-                console.log(this.state.courseslabels);
             })
+        }
 
     }
 
@@ -83,43 +136,107 @@ export default class Charts extends Component {
                 })
             })
     }
+
+    handleStateChange = selectedstate => {
+        this.setState({selectedstate});
+        let stateurl  = '/college/collegedata/chart/'+selectedstate.value;
+        instance.get(stateurl)
+            .then((res)=>{
+                this.setState({
+                    specificstatecolleges: res.data,
+                    showspecificstatetable: 1
+                })
+            })
+    }
+    
     render() {
         return (
             <div className="mt-5 mb-5">
-                <Button variant="dark" onClick={this.handleChartGenerator}>Generate Chart</Button>{' '}
-                <Pie 
-                    data={this.state.courseschartdata}
-                    options={{
-                        title:{
-                        display:this.state.showchart,
-                        text:'Courses data',
-                        fontSize:20
-                        },
-                        legend:{
-                        display: true,
-                        position:'right'
-                        }
-                    }}
-                />
-                <div className="mt-4" style={{ display: this.state.showchart ? "block" : "none" }}>
-                    <Row>
+                <div>
+                    <Row className="mb-3">
                         <Col md="4">
-                            <p>Select Course:</p>
+                            <p>Select Category:</p>
                             <ReactSelect 
-                                selectedOption = {this.state.selectedcourse}
-                                handleChange={this.handleCourseChange}
-                                options = {this.state.courseslabels}
+                                selectedOption = {this.state.selectedchartcategory}
+                                handleChange={this.handleChartCategoryChange}
+                                options = {this.state.chartcategory}
                             />
                         </Col>
                     </Row>
                 </div>
+                <Button variant="dark" onClick={this.handleChartGenerator}>Generate Chart</Button>{' '}
+                <div className="mt-3" style={{ display: this.state.showstatechart ? "block" : "none" }}>
+                    <Bar
+                        data={this.state.statechartdata}
+                        options={{
+                            title:{
+                            display:true,
+                            text:'State Data',
+                            fontSize:20
+                            },
+                            legend:{
+                            display:true,
+                            position:'bottom'
+                            }
+                        }}
+                    />
+                    <div className="mt-4" style={{ display: this.state.showstatechart ? "block" : "none" }}>
+                        <Row>
+                            <Col md="4">
+                                <p>Select State:</p>
+                                <ReactSelect 
+                                    selectedOption = {this.state.selectedstate}
+                                    handleChange={this.handleStateChange}
+                                    options = {this.state.stateoptions}
+                                />
+                            </Col>
+                        </Row>
+                    </div>
 
-                <div className="mt-4" style={{ display: this.state.showspecificcoursetable ? "block" : "none" }}>
-                    <TableHeader
-                        header={this.state.specificcoursecollegesheader} 
-                        data = {this.state.specificcoursecolleges}
-                        dataname = "College"
-                    />  
+                    <div className="mt-4" style={{ display: this.state.showspecificstatetable ? "block" : "none" }}>
+                        <TableHeader
+                            header={this.state.specificcoursecollegesheader} 
+                            data = {this.state.specificstatecolleges}
+                            dataname = "College"
+                        />  
+                    </div>
+                </div>
+
+                <div className="mt-3" style={{ display: this.state.showcoursechart ? "block" : "none" }}>
+                    <Pie 
+                        data={this.state.courseschartdata}
+                        options={{
+                            title:{
+                            display:this.state.showchart,
+                            text:'Courses data',
+                            fontSize:20
+                            },
+                            legend:{
+                            display: true,
+                            position:'right'
+                            }
+                        }}
+                    />
+                    <div className="mt-4" style={{ display: this.state.showchart ? "block" : "none" }}>
+                        <Row>
+                            <Col md="4">
+                                <p>Select Course:</p>
+                                <ReactSelect 
+                                    selectedOption = {this.state.selectedcourse}
+                                    handleChange={this.handleCourseChange}
+                                    options = {this.state.courseslabels}
+                                />
+                            </Col>
+                        </Row>
+                    </div>
+
+                    <div className="mt-4" style={{ display: this.state.showspecificcoursetable ? "block" : "none" }}>
+                        <TableHeader
+                            header={this.state.specificcoursecollegesheader} 
+                            data = {this.state.specificcoursecolleges}
+                            dataname = "College"
+                        />  
+                    </div>
                 </div>
             </div>
         )
