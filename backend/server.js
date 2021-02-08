@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDb Connection 
-const uri = process.env.ATLAS_URI
+const uri = "mongodb+srv://oneshot:oneshot@cluster0.le8lm.mongodb.net/<dbname>?retryWrites=true&w=majority"
 mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true });
 const connection = mongoose.connection;
 connection.once('open', () => {
